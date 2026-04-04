@@ -1,0 +1,38 @@
+{{define "layout"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{block "title" .}}{{.Site.Title}}{{end}}</title>
+  {{block "meta" .}}<meta name="description" content="{{.Site.Tagline}}" />{{end}}
+  <link rel="alternate" type="application/rss+xml" title="{{.Site.Title}} RSS" href="{{.Site.FeedURL}}" />
+  <link rel="stylesheet" href="{{.Site.BasePath}}/static/blog.css" />
+  {{if .Site.Accent}}<style>:root{--blog-accent:{{.Site.Accent}};}</style>{{end}}
+  {{with .ExtraHead}}{{.}}{{end}}
+</head>
+<body class="blog-body">
+  <header class="blog-header">
+    <div class="blog-container">
+      <a class="blog-brand" href="{{.Site.BasePath}}/">{{.Site.Title}}</a>
+      <nav class="blog-nav">
+        <a href="{{.Site.BasePath}}/">Articles</a>
+        <a href="{{.Site.FeedURL}}">RSS</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="blog-container blog-main">
+    {{block "content" .}}{{end}}
+  </main>
+
+  <footer class="blog-footer">
+    <div class="blog-container">
+      <span>&copy; {{.Year}} {{if .Site.Author}}{{.Site.Author}}{{else}}{{.Site.Title}}{{end}}</span>
+      <span class="blog-footer-sep">·</span>
+      <a href="{{.Site.FeedURL}}">RSS</a>
+      {{with .ExtraFoot}}<span class="blog-footer-sep">·</span>{{.}}{{end}}
+    </div>
+  </footer>
+</body>
+</html>
+{{end}}

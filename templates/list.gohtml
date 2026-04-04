@@ -1,0 +1,60 @@
+{{define "title"}}{{if .Tag}}#{{.Tag}} · {{end}}{{.Site.Title}}{{end}}
+{{define "content"}}
+<section class="blog-hero">
+  {{if .Tag}}
+    <h1>Tagged <span class="blog-hero-accent">#{{.Tag}}</span></h1>
+    <p><a href="{{.Site.BasePath}}/">← All articles</a></p>
+  {{else}}
+    <h1>{{.Site.Title}} <span class="blog-hero-accent">·</span></h1>
+    <p>{{.Site.Tagline}}</p>
+  {{end}}
+</section>
+
+{{if .Posts}}
+<section class="post-feed">
+  {{range .Posts}}
+  <article class="post-item{{if .IsLead}} post-lead{{end}}">
+    <div class="post-item-inner">
+      <div class="post-item-text">
+        <div class="post-item-meta">
+          {{if .DisplayDate}}<time datetime="{{.ISO8601}}">{{.DisplayDate}}</time>{{end}}
+          {{if .ReadingMins}}<span class="sep">·</span><span>{{.ReadingMins}} min read</span>{{end}}
+          {{if .Author}}<span class="sep">·</span><span class="post-author">{{.Author}}</span>{{end}}
+          {{if .Featured}}<span class="sep">·</span><span class="featured-badge">Featured</span>{{end}}
+          {{if .Tags}}<span class="sep">·</span>
+            <span class="category-pills">
+              {{range .Tags}}<a href="{{$.Site.BasePath}}/tags/{{.}}" class="category-pill">{{.}}</a>{{end}}
+            </span>
+          {{end}}
+        </div>
+        <h2 class="post-item-title"><a href="{{.URL}}">{{.Title}}</a></h2>
+        {{if .Excerpt}}<p class="post-item-excerpt">{{.Excerpt}}</p>{{end}}
+        <a class="post-item-readmore" href="{{.URL}}">Read article →</a>
+      </div>
+      {{if .Cover}}
+      <div class="post-item-image">
+        <a href="{{.URL}}"><img src="{{.Cover}}" alt="{{.Title}}" loading="{{if .IsLead}}eager{{else}}lazy{{end}}" /></a>
+      </div>
+      {{end}}
+    </div>
+  </article>
+  {{end}}
+</section>
+
+{{if or .HasPrev .HasNext}}
+<nav class="blog-pagination">
+  {{if .HasPrev}}<a href="{{.PrevURL}}">← Newer</a>{{else}}<span class="disabled">← Newer</span>{{end}}
+  <span>Page {{.Page}}</span>
+  {{if .HasNext}}<a href="{{.NextURL}}">Older →</a>{{else}}<span class="disabled">Older →</span>{{end}}
+</nav>
+{{end}}
+
+{{else}}
+<div class="blog-empty">
+  <h3>No articles yet</h3>
+  <p>Drop a markdown file into the posts directory to publish.</p>
+</div>
+{{end}}
+{{end}}
+
+{{template "layout" .}}

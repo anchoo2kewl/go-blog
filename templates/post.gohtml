@@ -1,0 +1,41 @@
+{{define "title"}}{{.Post.Title}} · {{.Site.Title}}{{end}}
+{{define "meta"}}<meta name="description" content="{{.Post.Excerpt}}" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="{{.Post.Title}}" />
+<meta property="og:description" content="{{.Post.Excerpt}}" />
+{{if .Post.Cover}}<meta property="og:image" content="{{.Post.Cover}}" />{{end}}
+<meta name="twitter:card" content="{{if .Post.Cover}}summary_large_image{{else}}summary{{end}}" />
+{{end}}
+{{define "content"}}
+<article class="blog-article">
+  {{if .Post.Cover}}
+  <div class="blog-article-cover">
+    <img src="{{.Post.Cover}}" alt="{{.Post.Title}}" loading="eager" fetchpriority="high" />
+  </div>
+  {{end}}
+
+  <header class="blog-article-header">
+    <h1>{{.Post.Title}}</h1>
+    <div class="blog-article-meta">
+      {{if .Post.DisplayDate}}<time datetime="{{.Post.ISO8601}}">{{.Post.DisplayDate}}</time>{{end}}
+      {{if .Post.ReadingMins}}<span class="sep">·</span><span>{{.Post.ReadingMins}} min read</span>{{end}}
+      {{if .Post.Author}}<span class="sep">·</span><span>{{.Post.Author}}</span>{{end}}
+    </div>
+    {{if .Post.Tags}}
+    <div class="category-pills">
+      {{range .Post.Tags}}<a href="{{$.Site.BasePath}}/tags/{{.}}" class="category-pill">{{.}}</a>{{end}}
+    </div>
+    {{end}}
+  </header>
+
+  <div class="blog-article-body">
+    {{.Post.HTML}}
+  </div>
+
+  <footer class="blog-article-footer">
+    <a href="{{.Site.BasePath}}/">← All articles</a>
+  </footer>
+</article>
+{{end}}
+
+{{template "layout" .}}
