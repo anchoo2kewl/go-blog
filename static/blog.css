@@ -74,9 +74,11 @@ a:hover { color: var(--blog-accent-hover); text-decoration: underline; }
   color: var(--blog-fg);
 }
 .blog-brand:hover { text-decoration: none; color: var(--blog-accent); }
-.blog-nav { display: flex; gap: 20px; font-size: 14px; }
+.blog-nav { display: flex; gap: 20px; font-size: 14px; align-items: center; }
 .blog-nav a { color: var(--blog-fg-muted); }
 .blog-nav a:hover { color: var(--blog-accent); text-decoration: none; }
+.blog-nav-home { color: var(--blog-fg) !important; font-weight: 500; padding-right: 18px; border-right: 1px solid var(--blog-border); }
+.blog-nav-home:hover { color: var(--blog-accent) !important; }
 
 /* Main + footer */
 .blog-main { padding: 48px 24px 80px; }

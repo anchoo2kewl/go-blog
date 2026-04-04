@@ -46,6 +46,8 @@ type Blog struct {
 	drawBasePath string
 	feedURL      string
 	perPage      int
+	homeURL      string
+	homeLabel    string
 	extraHead    template.HTML
 	extraFooter  template.HTML
 }

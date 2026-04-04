@@ -80,6 +80,19 @@ func WithPerPage(n int) Option {
 	}
 }
 
+// WithHomeLink adds a "back to main site" link in the blog header nav.
+// url is the target (absolute or relative). label is the link text shown.
+// Leave unset to omit the link.
+//
+//	blog.WithHomeLink("/", "← Home")
+//	blog.WithHomeLink("https://example.com", "example.com")
+func WithHomeLink(url, label string) Option {
+	return func(b *Blog) {
+		b.homeURL = url
+		b.homeLabel = label
+	}
+}
+
 // WithExtraHead injects raw HTML into <head> of every blog page (analytics, meta).
 func WithExtraHead(h template.HTML) Option {
 	return func(b *Blog) { b.extraHead = h }

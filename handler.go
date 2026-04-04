@@ -64,12 +64,14 @@ type pageData struct {
 }
 
 type siteData struct {
-	Title    string
-	Tagline  string
-	BasePath string
-	Accent   string
-	FeedURL  string
-	Author   string
+	Title     string
+	Tagline   string
+	BasePath  string
+	Accent    string
+	FeedURL   string
+	Author    string
+	HomeURL   string
+	HomeLabel string
 }
 
 type postView struct {
@@ -87,12 +89,14 @@ type tagCount struct {
 
 func (b *Blog) baseSite() siteData {
 	return siteData{
-		Title:    b.siteTitle,
-		Tagline:  b.siteTagline,
-		BasePath: b.basePath,
-		Accent:   b.accentColor,
-		FeedURL:  b.feedOrDefault(),
-		Author:   b.authorName,
+		Title:     b.siteTitle,
+		Tagline:   b.siteTagline,
+		BasePath:  b.basePath,
+		Accent:    b.accentColor,
+		FeedURL:   b.feedOrDefault(),
+		Author:    b.authorName,
+		HomeURL:   b.homeURL,
+		HomeLabel: b.homeLabel,
 	}
 }
 
