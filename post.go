@@ -16,6 +16,7 @@ type Post struct {
 	Slug        string    // URL slug (derived from filename if not set)
 	Title       string    // Required. Falls back to slug if empty.
 	Author      string    // Author display name.
+	AuthorURL   string    // Optional URL for the author profile page.
 	Date        time.Time // Publication date.
 	Updated     time.Time // Last-edit date (optional).
 	Cover       string    // Cover / featured image URL.
@@ -23,6 +24,8 @@ type Post struct {
 	Excerpt     string    // Short summary (auto-extracted if empty).
 	Draft       bool      // Hidden from listings when true.
 	Featured    bool      // Pinned as lead article when true.
+	Canonical   string    // Canonical URL (takes precedence over Source).
+	Source      string    // Original URL if syndicated (shown as back-link).
 	Content     string    // Raw markdown body.
 	ReadingMins int       // Estimated reading time in minutes.
 }
@@ -62,6 +65,12 @@ func ParsePost(raw []byte, defaultSlug string) (*Post, error) {
 			p.Title = scalar(v)
 		case "author":
 			p.Author = scalar(v)
+		case "author_url", "author_link":
+			p.AuthorURL = scalar(v)
+		case "canonical", "canonical_url":
+			p.Canonical = scalar(v)
+		case "source", "source_url", "original_url":
+			p.Source = scalar(v)
 		case "slug":
 			p.Slug = scalar(v)
 		case "cover", "cover_image", "featured_image":

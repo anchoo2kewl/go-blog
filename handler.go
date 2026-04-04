@@ -33,6 +33,8 @@ func (b *Blog) routes() http.Handler {
 		switch {
 		case rest == "feed.xml" || rest == "rss.xml":
 			b.handleFeed(w, r)
+		case rest == "sitemap.xml":
+			b.handleSitemap(w, r)
 		case rest == "api/posts":
 			b.handleAPIList(w, r)
 		case strings.HasPrefix(rest, "api/posts/"):
@@ -48,19 +50,22 @@ func (b *Blog) routes() http.Handler {
 }
 
 type pageData struct {
-	Site       siteData
-	Posts      []postView
-	Post       *postView
-	Tag        string
-	Page       int
-	HasPrev    bool
-	HasNext    bool
-	PrevURL    string
-	NextURL    string
-	AllTags    []tagCount
-	ExtraHead  template.HTML
-	ExtraFoot  template.HTML
-	Year       int
+	Site      siteData
+	Posts     []postView
+	Post      *postView
+	Tag       string
+	Page      int
+	HasPrev   bool
+	HasNext   bool
+	PrevURL   string
+	NextURL   string
+	AllTags   []tagCount
+	ExtraHead template.HTML
+	ExtraFoot template.HTML
+	Year      int
+	// Populated per-request for SEO tags.
+	CanonicalURL string
+	AbsoluteBase string // scheme://host (no trailing slash)
 }
 
 type siteData struct {
@@ -76,9 +81,10 @@ type siteData struct {
 
 type postView struct {
 	*Post
-	HTML   template.HTML
-	URL    string
-	IsLead bool
+	HTML       template.HTML
+	URL        string
+	IsLead     bool
+	SourceHost string // host of Source URL for the "Originally on X" label
 }
 
 type tagCount struct {
@@ -108,12 +114,32 @@ func (b *Blog) feedOrDefault() string {
 }
 
 func (b *Blog) toView(p *Post, lead bool) postView {
-	return postView{
+	v := postView{
 		Post:   p,
 		HTML:   template.HTML(b.renderer.RenderContent(p.Content)),
 		URL:    p.URL(b.basePath),
 		IsLead: lead,
 	}
+	v.SourceHost = hostOf(p.Source)
+	return v
+}
+
+func hostOf(rawURL string) string {
+	if rawURL == "" {
+		return ""
+	}
+	// Poor-man's URL parser to avoid pulling net/url into the view.
+	s := rawURL
+	for _, prefix := range []string{"https://", "http://", "//"} {
+		if strings.HasPrefix(s, prefix) {
+			s = s[len(prefix):]
+			break
+		}
+	}
+	if i := strings.IndexAny(s, "/?#"); i >= 0 {
+		s = s[:i]
+	}
+	return strings.TrimPrefix(s, "www.")
 }
 
 // handleList renders the main list page, optionally filtered by tag.
@@ -140,16 +166,23 @@ func (b *Blog) handleList(w http.ResponseWriter, r *http.Request) {
 	for i, p := range slice {
 		views[i] = b.toView(p, i == 0 && page == 1)
 	}
+	base := b.absoluteBase(r)
+	canonical := base + b.basePath + "/"
+	if page > 1 {
+		canonical = fmt.Sprintf("%s?page=%d", canonical, page)
+	}
 	data := pageData{
-		Site:      b.baseSite(),
-		Posts:     views,
-		Page:      page,
-		HasPrev:   page > 1,
-		HasNext:   end < len(posts),
-		AllTags:   b.tagCounts(posts),
-		ExtraHead: b.extraHead,
-		ExtraFoot: b.extraFooter,
-		Year:      time.Now().Year(),
+		Site:         b.baseSite(),
+		Posts:        views,
+		Page:         page,
+		HasPrev:      page > 1,
+		HasNext:      end < len(posts),
+		AllTags:      b.tagCounts(posts),
+		ExtraHead:    b.extraHead,
+		ExtraFoot:    b.extraFooter,
+		Year:         time.Now().Year(),
+		CanonicalURL: canonical,
+		AbsoluteBase: base,
 	}
 	if data.HasPrev {
 		data.PrevURL = fmt.Sprintf("%s/?page=%d", b.basePath, page-1)
@@ -185,14 +218,17 @@ func (b *Blog) handleTag(w http.ResponseWriter, r *http.Request, tag string) {
 	for i, p := range filtered {
 		views[i] = b.toView(p, false)
 	}
+	base := b.absoluteBase(r)
 	b.render(w, "list.gohtml", pageData{
-		Site:      b.baseSite(),
-		Posts:     views,
-		Tag:       tag,
-		AllTags:   b.tagCounts(all),
-		ExtraHead: b.extraHead,
-		ExtraFoot: b.extraFooter,
-		Year:      time.Now().Year(),
+		Site:         b.baseSite(),
+		Posts:        views,
+		Tag:          tag,
+		AllTags:      b.tagCounts(all),
+		ExtraHead:    b.extraHead,
+		ExtraFoot:    b.extraFooter,
+		Year:         time.Now().Year(),
+		CanonicalURL: base + b.basePath + "/tags/" + tag,
+		AbsoluteBase: base,
 	})
 }
 
@@ -214,13 +250,26 @@ func (b *Blog) handlePost(w http.ResponseWriter, r *http.Request, slug string) {
 	}
 	view := b.toView(p, false)
 	all, _ := b.store.List()
+	base := b.absoluteBase(r)
+	// Canonical: explicit post.Canonical wins, then post.Source (for
+	// syndicated content — points Google at the original), otherwise
+	// self-referencing.
+	canonical := p.Canonical
+	if canonical == "" {
+		canonical = p.Source
+	}
+	if canonical == "" {
+		canonical = base + view.URL
+	}
 	b.render(w, "post.gohtml", pageData{
-		Site:      b.baseSite(),
-		Post:      &view,
-		AllTags:   b.tagCounts(all),
-		ExtraHead: b.extraHead,
-		ExtraFoot: b.extraFooter,
-		Year:      time.Now().Year(),
+		Site:         b.baseSite(),
+		Post:         &view,
+		AllTags:      b.tagCounts(all),
+		ExtraHead:    b.extraHead,
+		ExtraFoot:    b.extraFooter,
+		Year:         time.Now().Year(),
+		CanonicalURL: canonical,
+		AbsoluteBase: base,
 	})
 }
 
@@ -330,6 +379,51 @@ func (b *Blog) handleFeed(w http.ResponseWriter, r *http.Request) {
 	_ = xml.NewEncoder(w).Encode(f)
 }
 
+// handleSitemap serves a Google-compatible XML sitemap covering the list
+// page, each published post, and each tag page.
+func (b *Blog) handleSitemap(w http.ResponseWriter, r *http.Request) {
+	posts, err := b.store.List()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	type urlEntry struct {
+		XMLName xml.Name `xml:"url"`
+		Loc     string   `xml:"loc"`
+		LastMod string   `xml:"lastmod,omitempty"`
+	}
+	type urlSet struct {
+		XMLName xml.Name   `xml:"urlset"`
+		NS      string     `xml:"xmlns,attr"`
+		URLs    []urlEntry `xml:"url"`
+	}
+	base := b.absoluteBase(r)
+	out := urlSet{NS: "http://www.sitemaps.org/schemas/sitemap-0.9"}
+	out.URLs = append(out.URLs, urlEntry{Loc: base + b.basePath + "/"})
+	tagSeen := map[string]bool{}
+	for _, p := range posts {
+		lm := p.Date
+		if !p.Updated.IsZero() && p.Updated.After(lm) {
+			lm = p.Updated
+		}
+		e := urlEntry{Loc: base + p.URL(b.basePath)}
+		if !lm.IsZero() {
+			e.LastMod = lm.Format("2006-01-02")
+		}
+		out.URLs = append(out.URLs, e)
+		for _, t := range p.Tags {
+			if tagSeen[t] {
+				continue
+			}
+			tagSeen[t] = true
+			out.URLs = append(out.URLs, urlEntry{Loc: base + b.basePath + "/tags/" + t})
+		}
+	}
+	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
+	_, _ = w.Write([]byte(xml.Header))
+	_ = xml.NewEncoder(w).Encode(out)
+}
+
 func absURL(r *http.Request, path string) string {
 	scheme := "http"
 	if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
@@ -369,6 +463,15 @@ func (b *Blog) tagCounts(posts []*Post) []tagCount {
 		}
 	}
 	return out
+}
+
+// absoluteBase returns the configured SiteURL if set, otherwise derives
+// scheme://host from the incoming request (honouring X-Forwarded-* headers).
+func (b *Blog) absoluteBase(r *http.Request) string {
+	if b.siteURL != "" {
+		return b.siteURL
+	}
+	return absURL(r, "")
 }
 
 func (b *Blog) render(w http.ResponseWriter, name string, data pageData) {

@@ -19,7 +19,9 @@
         <div class="post-item-meta">
           {{if .DisplayDate}}<time datetime="{{.ISO8601}}">{{.DisplayDate}}</time>{{end}}
           {{if .ReadingMins}}<span class="sep">·</span><span>{{.ReadingMins}} min read</span>{{end}}
-          {{if .Author}}<span class="sep">·</span><span class="post-author">{{.Author}}</span>{{end}}
+          {{if .Author}}<span class="sep">·</span>
+            {{if .AuthorURL}}<a href="{{.AuthorURL}}" class="post-author-link" rel="author">{{.Author}}</a>{{else}}<span class="post-author">{{.Author}}</span>{{end}}
+          {{end}}
           {{if .Featured}}<span class="sep">·</span><span class="featured-badge">Featured</span>{{end}}
           {{if .Tags}}<span class="sep">·</span>
             <span class="category-pills">

@@ -48,6 +48,7 @@ type Blog struct {
 	perPage      int
 	homeURL      string
 	homeLabel    string
+	siteURL      string
 	extraHead    template.HTML
 	extraFooter  template.HTML
 }

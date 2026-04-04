@@ -93,6 +93,14 @@ func WithHomeLink(url, label string) Option {
 	}
 }
 
+// WithSiteURL sets the absolute base URL of the deployment (e.g.
+// "https://aiagentlens.com"). Required for proper sitemap.xml generation,
+// absolute canonical URLs, JSON-LD structured data, and Open Graph tags.
+// If unset, the blog will fall back to the request Host header.
+func WithSiteURL(u string) Option {
+	return func(b *Blog) { b.siteURL = strings.TrimRight(u, "/") }
+}
+
 // WithExtraHead injects raw HTML into <head> of every blog page (analytics, meta).
 func WithExtraHead(h template.HTML) Option {
 	return func(b *Blog) { b.extraHead = h }

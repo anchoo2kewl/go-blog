@@ -237,6 +237,15 @@ func serialize(p *Post) []byte {
 	if p.Author != "" {
 		fmt.Fprintf(&b, "author: %q\n", p.Author)
 	}
+	if p.AuthorURL != "" {
+		fmt.Fprintf(&b, "author_url: %q\n", p.AuthorURL)
+	}
+	if p.Canonical != "" {
+		fmt.Fprintf(&b, "canonical: %q\n", p.Canonical)
+	}
+	if p.Source != "" {
+		fmt.Fprintf(&b, "source: %q\n", p.Source)
+	}
 	if !p.Date.IsZero() {
 		fmt.Fprintf(&b, "date: %s\n", p.Date.Format("2006-01-02"))
 	}

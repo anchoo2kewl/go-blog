@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{block "title" .}}{{.Site.Title}}{{end}}</title>
   {{block "meta" .}}<meta name="description" content="{{.Site.Tagline}}" />{{end}}
+  {{if .CanonicalURL}}<link rel="canonical" href="{{.CanonicalURL}}" />{{end}}
   <link rel="alternate" type="application/rss+xml" title="{{.Site.Title}} RSS" href="{{.Site.FeedURL}}" />
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="{{.Site.BasePath}}/sitemap.xml" />
   <link rel="stylesheet" href="{{.Site.BasePath}}/static/blog.css" />
   {{if .Site.Accent}}<style>:root{--blog-accent:{{.Site.Accent}};}</style>{{end}}
+  {{block "head-extra" .}}{{end}}
   {{with .ExtraHead}}{{.}}{{end}}
 </head>
 <body class="blog-body">
@@ -31,6 +34,8 @@
       <span>&copy; {{.Year}} {{if .Site.Author}}{{.Site.Author}}{{else}}{{.Site.Title}}{{end}}</span>
       <span class="blog-footer-sep">·</span>
       <a href="{{.Site.FeedURL}}">RSS</a>
+      <span class="blog-footer-sep">·</span>
+      <a href="{{.Site.BasePath}}/sitemap.xml">Sitemap</a>
       {{with .ExtraFoot}}<span class="blog-footer-sep">·</span>{{.}}{{end}}
     </div>
   </footer>

@@ -1,10 +1,43 @@
 {{define "title"}}{{.Post.Title}} · {{.Site.Title}}{{end}}
 {{define "meta"}}<meta name="description" content="{{.Post.Excerpt}}" />
 <meta property="og:type" content="article" />
+<meta property="og:site_name" content="{{.Site.Title}}" />
 <meta property="og:title" content="{{.Post.Title}}" />
 <meta property="og:description" content="{{.Post.Excerpt}}" />
+<meta property="og:url" content="{{.CanonicalURL}}" />
 {{if .Post.Cover}}<meta property="og:image" content="{{.Post.Cover}}" />{{end}}
+{{if .Post.ISO8601}}<meta property="article:published_time" content="{{.Post.ISO8601}}" />{{end}}
+{{if .Post.Author}}<meta property="article:author" content="{{.Post.Author}}" />{{end}}
+{{range .Post.Tags}}<meta property="article:tag" content="{{.}}" />
+{{end}}
 <meta name="twitter:card" content="{{if .Post.Cover}}summary_large_image{{else}}summary{{end}}" />
+<meta name="twitter:title" content="{{.Post.Title}}" />
+<meta name="twitter:description" content="{{.Post.Excerpt}}" />
+{{if .Post.Cover}}<meta name="twitter:image" content="{{.Post.Cover}}" />{{end}}
+{{end}}
+{{define "head-extra"}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": {{.Post.Title | json}},
+  "description": {{.Post.Excerpt | json}},
+  {{if .Post.Cover}}"image": {{.Post.Cover | json}},{{end}}
+  "datePublished": "{{.Post.ISO8601}}",
+  "dateModified": "{{if .Post.Updated.IsZero}}{{.Post.ISO8601}}{{else}}{{.Post.Updated.Format "2006-01-02T15:04:05Z07:00"}}{{end}}",
+  "author": {
+    "@type": "Person",
+    "name": {{.Post.Author | json}}{{if .Post.AuthorURL}},
+    "url": {{.Post.AuthorURL | json}}{{end}}
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": {{.Site.Title | json}}
+  },
+  "mainEntityOfPage": {{.CanonicalURL | json}}{{if .Post.Tags}},
+  "keywords": {{.Post.Tags | joinCSV | json}}{{end}}
+}
+</script>
 {{end}}
 {{define "content"}}
 <article class="blog-article">
@@ -19,11 +52,18 @@
     <div class="blog-article-meta">
       {{if .Post.DisplayDate}}<time datetime="{{.Post.ISO8601}}">{{.Post.DisplayDate}}</time>{{end}}
       {{if .Post.ReadingMins}}<span class="sep">·</span><span>{{.Post.ReadingMins}} min read</span>{{end}}
-      {{if .Post.Author}}<span class="sep">·</span><span>{{.Post.Author}}</span>{{end}}
+      {{if .Post.Author}}<span class="sep">·</span>
+        {{if .Post.AuthorURL}}<a href="{{.Post.AuthorURL}}" class="post-author-link" rel="author">{{.Post.Author}}</a>{{else}}<span>{{.Post.Author}}</span>{{end}}
+      {{end}}
     </div>
     {{if .Post.Tags}}
     <div class="category-pills">
       {{range .Post.Tags}}<a href="{{$.Site.BasePath}}/tags/{{.}}" class="category-pill">{{.}}</a>{{end}}
+    </div>
+    {{end}}
+    {{if .Post.Source}}
+    <div class="blog-article-source">
+      Originally published on <a href="{{.Post.Source}}" rel="canonical external" target="_blank">{{.Post.SourceHost}}</a>
     </div>
     {{end}}
   </header>
@@ -33,6 +73,11 @@
   </div>
 
   <footer class="blog-article-footer">
+    {{if .Post.Source}}
+    <p class="blog-article-source-foot">
+      Read the original on <a href="{{.Post.Source}}" rel="canonical external" target="_blank">{{.Post.SourceHost}}</a>.
+    </p>
+    {{end}}
     <a href="{{.Site.BasePath}}/">← All articles</a>
   </footer>
 </article>

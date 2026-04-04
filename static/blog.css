@@ -287,7 +287,22 @@ a:hover { color: var(--blog-accent-hover); text-decoration: underline; }
 .blog-article-body .godraw-embed { margin: 1.5em 0; }
 .blog-article-body iframe { max-width: 100%; border-radius: 10px; }
 
+.blog-article-source {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--blog-card);
+  border-left: 3px solid var(--blog-accent);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--blog-fg-muted);
+}
+.blog-article-source a { color: var(--blog-accent); font-weight: 500; }
+
+.post-author-link { color: var(--blog-accent); text-decoration: none; }
+.post-author-link:hover { text-decoration: underline; }
+
 .blog-article-footer { margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--blog-border); font-size: 14px; }
+.blog-article-source-foot { margin: 0 0 16px; color: var(--blog-fg-muted); font-size: 14px; }
 
 /* Responsive */
 @media (max-width: 700px) {
